@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -11,7 +11,6 @@ import { CheckCircle, XCircle } from "lucide-react"
 import DiagramaVenn from "@/components/diagrama-venn"
 import ExplicacaoTeoria from "@/components/explicacao-teoria"
 import { useToast } from "@/hooks/use-toast"
-// Adicionar importação do componente EnunciadoDinamico no topo do arquivo
 import EnunciadoDinamico from "@/components/enunciado-dinamico"
 
 export default function TeoriaConjuntos() {
@@ -25,6 +24,19 @@ export default function TeoriaConjuntos() {
   const [intersecaoBC, setIntersecaoBC] = useState(15)
   const [intersecaoABC, setIntersecaoABC] = useState(10)
   const [total, setTotal] = useState(200)
+
+  // Valores calculados para as regiões
+  const [valoresDasRegioes, setValoresDasRegioes] = useState({
+    soA: 0,
+    soB: 0,
+    soC: 0,
+    aEbNaoC: 0,
+    aEcNaoB: 0,
+    bEcNaoA: 0,
+    aBc: 0,
+    nenhum: 0,
+  })
+
   const [respostas, setRespostas] = useState({
     soA: "",
     soB: "",
@@ -35,6 +47,7 @@ export default function TeoriaConjuntos() {
     aBc: "",
     nenhum: "",
   })
+
   const [resultados, setResultados] = useState({
     soA: null,
     soB: null,
@@ -45,8 +58,8 @@ export default function TeoriaConjuntos() {
     aBc: null,
     nenhum: null,
   })
+
   const [mostrarRespostas, setMostrarRespostas] = useState(false)
-  // Adicionar novos estados para o tema e nomes dos conjuntos
   const [temaSelecionado, setTemaSelecionado] = useState("esportes")
   const [nomesConjuntos, setNomesConjuntos] = useState({
     A: { nome: "Futebol", valor: 75, intersecaoB: 25, intersecaoC: 20, intersecaoBC: 10 },
@@ -54,30 +67,46 @@ export default function TeoriaConjuntos() {
     C: { nome: "Basquete", valor: 50 },
   })
 
-  // Cálculos dos conjuntos
-  const calcularABC = () =>
-    conjuntoA + conjuntoB + conjuntoC - intersecaoAB - intersecaoAC - intersecaoBC + intersecaoABC
+  // Função para calcular todos os valores das regiões
+  const calcularTodasRegioes = () => {
+    const soA = conjuntoA - (intersecaoAB + intersecaoAC - intersecaoABC)
+    const soB = conjuntoB - (intersecaoAB + intersecaoBC - intersecaoABC)
+    const soC = conjuntoC - (intersecaoAC + intersecaoBC - intersecaoABC)
+    const aEbNaoC = intersecaoAB - intersecaoABC
+    const aEcNaoB = intersecaoAC - intersecaoABC
+    const bEcNaoA = intersecaoBC - intersecaoABC
+    const aBc = intersecaoABC
+    const totalABC = conjuntoA + conjuntoB + conjuntoC - intersecaoAB - intersecaoAC - intersecaoBC + intersecaoABC
+    const nenhum = total - totalABC
 
-  const calcularSoA = () => conjuntoA - (intersecaoAB + intersecaoAC - intersecaoABC)
-  const calcularSoB = () => conjuntoB - (intersecaoAB + intersecaoBC - intersecaoABC)
-  const calcularSoC = () => conjuntoC - (intersecaoAC + intersecaoBC - intersecaoABC)
+    return {
+      soA,
+      soB,
+      soC,
+      aEbNaoC,
+      aEcNaoB,
+      bEcNaoA,
+      aBc,
+      nenhum,
+    }
+  }
 
-  const calcularAeBnaoC = () => intersecaoAB - intersecaoABC
-  const calcularAeCnaoB = () => intersecaoAC - intersecaoABC
-  const calcularBeCnaoA = () => intersecaoBC - intersecaoABC
-
-  const calcularNenhum = () => total - calcularABC()
+  // Atualiza os valores calculados sempre que os dados mudam
+  useEffect(() => {
+    const novosValores = calcularTodasRegioes()
+    setValoresDasRegioes(novosValores)
+  }, [conjuntoA, conjuntoB, conjuntoC, intersecaoAB, intersecaoAC, intersecaoBC, intersecaoABC, total])
 
   const verificarRespostas = () => {
     const novoResultados = {
-      soA: Number.parseInt(respostas.soA) === calcularSoA(),
-      soB: Number.parseInt(respostas.soB) === calcularSoB(),
-      soC: Number.parseInt(respostas.soC) === calcularSoC(),
-      aEbNaoC: Number.parseInt(respostas.aEbNaoC) === calcularAeBnaoC(),
-      aEcNaoB: Number.parseInt(respostas.aEcNaoB) === calcularAeCnaoB(),
-      bEcNaoA: Number.parseInt(respostas.bEcNaoA) === calcularBeCnaoA(),
-      aBc: Number.parseInt(respostas.aBc) === intersecaoABC,
-      nenhum: Number.parseInt(respostas.nenhum) === calcularNenhum(),
+      soA: Number.parseInt(respostas.soA) === valoresDasRegioes.soA,
+      soB: Number.parseInt(respostas.soB) === valoresDasRegioes.soB,
+      soC: Number.parseInt(respostas.soC) === valoresDasRegioes.soC,
+      aEbNaoC: Number.parseInt(respostas.aEbNaoC) === valoresDasRegioes.aEbNaoC,
+      aEcNaoB: Number.parseInt(respostas.aEcNaoB) === valoresDasRegioes.aEcNaoB,
+      bEcNaoA: Number.parseInt(respostas.bEcNaoA) === valoresDasRegioes.bEcNaoA,
+      aBc: Number.parseInt(respostas.aBc) === valoresDasRegioes.aBc,
+      nenhum: Number.parseInt(respostas.nenhum) === valoresDasRegioes.nenhum,
     }
 
     setResultados(novoResultados)
@@ -91,9 +120,6 @@ export default function TeoriaConjuntos() {
     })
   }
 
-  // Modificar a função gerarNovoProblema para garantir que os valores sejam atualizados corretamente
-  // Substitua a função gerarNovoProblema atual por esta versão corrigida:
-
   const gerarNovoProblema = () => {
     // Gera valores aleatórios mas consistentes
     const novoTotal = Math.floor(Math.random() * 300) + 100
@@ -106,13 +132,24 @@ export default function TeoriaConjuntos() {
     const maxAC = Math.min(novoA, novoC) - 5
     const maxBC = Math.min(novoB, novoC) - 5
 
-    const novoAB = Math.max(Math.floor(Math.random() * maxAB) + 5, 5)
-    const novoAC = Math.max(Math.floor(Math.random() * maxAC) + 5, 5)
-    const novoBC = Math.max(Math.floor(Math.random() * maxBC) + 5, 5)
+    const novoAB = Math.max(Math.min(Math.floor(Math.random() * maxAB) + 5, maxAB), 5)
+    const novoAC = Math.max(Math.min(Math.floor(Math.random() * maxAC) + 5, maxAC), 5)
+    const novoBC = Math.max(Math.min(Math.floor(Math.random() * maxBC) + 5, maxBC), 5)
 
     // Garante que a interseção ABC seja menor que as interseções 2 a 2
-    const maxABC = Math.min(novoAB, novoAC, novoBC) - 2
-    const novoABC = Math.max(Math.floor(Math.random() * maxABC) + 2, 1)
+    const maxABC = Math.min(novoAB, novoAC, novoBC) - 1
+    const novoABC = Math.max(Math.min(Math.floor(Math.random() * maxABC) + 1, maxABC), 1)
+
+    // Verifica se os valores geram regiões válidas (não negativas)
+    const soA = novoA - (novoAB + novoAC - novoABC)
+    const soB = novoB - (novoAB + novoBC - novoABC)
+    const soC = novoC - (novoAC + novoBC - novoABC)
+
+    // Se alguma região for negativa, ajusta os valores
+    if (soA < 0 || soB < 0 || soC < 0) {
+      // Tenta novamente com valores diferentes
+      return gerarNovoProblema()
+    }
 
     // Atualiza os estados com os novos valores
     setConjuntoA(novoA)
@@ -217,8 +254,6 @@ export default function TeoriaConjuntos() {
       <TabsContent value="pratica">
         <Card>
           <CardContent className="pt-6">
-            {/* Modificar a seção de prática para incluir o enunciado dinâmico
-            Substitua o bloco de informações do problema por: */}
             <div className="mb-6 grid gap-4 rounded-lg bg-slate-50 p-4">
               <h2 className="text-xl font-bold text-slate-800">Problema Atual</h2>
 
@@ -267,16 +302,32 @@ export default function TeoriaConjuntos() {
 
             <div className="mb-6 grid gap-4">
               <h2 className="text-xl font-bold text-slate-800">Calcule os Valores</h2>
+
+              <Alert className="bg-amber-50 mb-4">
+                <AlertDescription>
+                  <p className="text-sm text-amber-700">
+                    <strong>Importante:</strong> Lembre-se que estamos calculando as regiões exclusivas do diagrama de
+                    Venn, não os conjuntos totais.
+                  </p>
+                  <p className="mt-1 text-sm text-amber-700">
+                    Por exemplo, "Só A" representa apenas os elementos que estão em A mas não estão em B nem em C.
+                  </p>
+                </AlertDescription>
+              </Alert>
+
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="grid gap-2">
-                  <Label htmlFor="soA" className="flex items-center gap-2">
-                    "Os Solitários de A" (Só A)
-                    {resultados.soA !== null &&
-                      (resultados.soA ? (
-                        <CheckCircle className="h-5 w-5 text-green-500" />
-                      ) : (
-                        <XCircle className="h-5 w-5 text-red-500" />
-                      ))}
+                  <Label htmlFor="soA" className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      "Os Solitários de A" (Só A)
+                      {resultados.soA !== null &&
+                        (resultados.soA ? (
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <XCircle className="h-5 w-5 text-red-500" />
+                        ))}
+                    </div>
+                    <span className="text-xs text-slate-500">A - (A∩B + A∩C - A∩B∩C)</span>
                   </Label>
                   <Input
                     id="soA"
@@ -285,20 +336,25 @@ export default function TeoriaConjuntos() {
                     onChange={(e) => handleInputChange("soA", e.target.value)}
                     className={resultados.soA === false ? "border-red-500" : ""}
                   />
-                  {mostrarRespostas && resultados.soA === false && (
-                    <p className="text-sm text-red-500">Resposta correta: {calcularSoA()}</p>
+                  {mostrarRespostas && (
+                    <p className={resultados.soA === false ? "text-sm text-red-500" : "text-sm text-green-500"}>
+                      Resposta correta: {valoresDasRegioes.soA}
+                    </p>
                   )}
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="soB" className="flex items-center gap-2">
-                    "Os Exclusivos de B" (Só B)
-                    {resultados.soB !== null &&
-                      (resultados.soB ? (
-                        <CheckCircle className="h-5 w-5 text-green-500" />
-                      ) : (
-                        <XCircle className="h-5 w-5 text-red-500" />
-                      ))}
+                  <Label htmlFor="soB" className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      "Os Exclusivos de B" (Só B)
+                      {resultados.soB !== null &&
+                        (resultados.soB ? (
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <XCircle className="h-5 w-5 text-red-500" />
+                        ))}
+                    </div>
+                    <span className="text-xs text-slate-500">B - (A∩B + B∩C - A∩B∩C)</span>
                   </Label>
                   <Input
                     id="soB"
@@ -307,20 +363,25 @@ export default function TeoriaConjuntos() {
                     onChange={(e) => handleInputChange("soB", e.target.value)}
                     className={resultados.soB === false ? "border-red-500" : ""}
                   />
-                  {mostrarRespostas && resultados.soB === false && (
-                    <p className="text-sm text-red-500">Resposta correta: {calcularSoB()}</p>
+                  {mostrarRespostas && (
+                    <p className={resultados.soB === false ? "text-sm text-red-500" : "text-sm text-green-500"}>
+                      Resposta correta: {valoresDasRegioes.soB}
+                    </p>
                   )}
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="soC" className="flex items-center gap-2">
-                    "Os C-zares Puros" (Só C)
-                    {resultados.soC !== null &&
-                      (resultados.soC ? (
-                        <CheckCircle className="h-5 w-5 text-green-500" />
-                      ) : (
-                        <XCircle className="h-5 w-5 text-red-500" />
-                      ))}
+                  <Label htmlFor="soC" className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      "Os C-zares Puros" (Só C)
+                      {resultados.soC !== null &&
+                        (resultados.soC ? (
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <XCircle className="h-5 w-5 text-red-500" />
+                        ))}
+                    </div>
+                    <span className="text-xs text-slate-500">C - (A∩C + B∩C - A∩B∩C)</span>
                   </Label>
                   <Input
                     id="soC"
@@ -329,20 +390,25 @@ export default function TeoriaConjuntos() {
                     onChange={(e) => handleInputChange("soC", e.target.value)}
                     className={resultados.soC === false ? "border-red-500" : ""}
                   />
-                  {mostrarRespostas && resultados.soC === false && (
-                    <p className="text-sm text-red-500">Resposta correta: {calcularSoC()}</p>
+                  {mostrarRespostas && (
+                    <p className={resultados.soC === false ? "text-sm text-red-500" : "text-sm text-green-500"}>
+                      Resposta correta: {valoresDasRegioes.soC}
+                    </p>
                   )}
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="aEbNaoC" className="flex items-center gap-2">
-                    "Os Casalzão A&B" (A∩B, mas não C)
-                    {resultados.aEbNaoC !== null &&
-                      (resultados.aEbNaoC ? (
-                        <CheckCircle className="h-5 w-5 text-green-500" />
-                      ) : (
-                        <XCircle className="h-5 w-5 text-red-500" />
-                      ))}
+                  <Label htmlFor="aEbNaoC" className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      "Os Casalzão A&B" (A∩B, mas não C)
+                      {resultados.aEbNaoC !== null &&
+                        (resultados.aEbNaoC ? (
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <XCircle className="h-5 w-5 text-red-500" />
+                        ))}
+                    </div>
+                    <span className="text-xs text-slate-500">A∩B - A∩B∩C</span>
                   </Label>
                   <Input
                     id="aEbNaoC"
@@ -351,20 +417,25 @@ export default function TeoriaConjuntos() {
                     onChange={(e) => handleInputChange("aEbNaoC", e.target.value)}
                     className={resultados.aEbNaoC === false ? "border-red-500" : ""}
                   />
-                  {mostrarRespostas && resultados.aEbNaoC === false && (
-                    <p className="text-sm text-red-500">Resposta correta: {calcularAeBnaoC()}</p>
+                  {mostrarRespostas && (
+                    <p className={resultados.aEbNaoC === false ? "text-sm text-red-500" : "text-sm text-green-500"}>
+                      Resposta correta: {valoresDasRegioes.aEbNaoC}
+                    </p>
                   )}
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="aEcNaoB" className="flex items-center gap-2">
-                    "Os Traidores de B" (A∩C, mas não B)
-                    {resultados.aEcNaoB !== null &&
-                      (resultados.aEcNaoB ? (
-                        <CheckCircle className="h-5 w-5 text-green-500" />
-                      ) : (
-                        <XCircle className="h-5 w-5 text-red-500" />
-                      ))}
+                  <Label htmlFor="aEcNaoB" className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      "Os Traidores de B" (A∩C, mas não B)
+                      {resultados.aEcNaoB !== null &&
+                        (resultados.aEcNaoB ? (
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <XCircle className="h-5 w-5 text-red-500" />
+                        ))}
+                    </div>
+                    <span className="text-xs text-slate-500">A∩C - A∩B∩C</span>
                   </Label>
                   <Input
                     id="aEcNaoB"
@@ -373,20 +444,25 @@ export default function TeoriaConjuntos() {
                     onChange={(e) => handleInputChange("aEcNaoB", e.target.value)}
                     className={resultados.aEcNaoB === false ? "border-red-500" : ""}
                   />
-                  {mostrarRespostas && resultados.aEcNaoB === false && (
-                    <p className="text-sm text-red-500">Resposta correta: {calcularAeCnaoB()}</p>
+                  {mostrarRespostas && (
+                    <p className={resultados.aEcNaoB === false ? "text-sm text-red-500" : "text-sm text-green-500"}>
+                      Resposta correta: {valoresDasRegioes.aEcNaoB}
+                    </p>
                   )}
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="bEcNaoA" className="flex items-center gap-2">
-                    "Os Rebeldes Sem A" (B∩C, mas não A)
-                    {resultados.bEcNaoA !== null &&
-                      (resultados.bEcNaoA ? (
-                        <CheckCircle className="h-5 w-5 text-green-500" />
-                      ) : (
-                        <XCircle className="h-5 w-5 text-red-500" />
-                      ))}
+                  <Label htmlFor="bEcNaoA" className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      "Os Rebeldes Sem A" (B∩C, mas não A)
+                      {resultados.bEcNaoA !== null &&
+                        (resultados.bEcNaoA ? (
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <XCircle className="h-5 w-5 text-red-500" />
+                        ))}
+                    </div>
+                    <span className="text-xs text-slate-500">B∩C - A∩B∩C</span>
                   </Label>
                   <Input
                     id="bEcNaoA"
@@ -395,20 +471,25 @@ export default function TeoriaConjuntos() {
                     onChange={(e) => handleInputChange("bEcNaoA", e.target.value)}
                     className={resultados.bEcNaoA === false ? "border-red-500" : ""}
                   />
-                  {mostrarRespostas && resultados.bEcNaoA === false && (
-                    <p className="text-sm text-red-500">Resposta correta: {calcularBeCnaoA()}</p>
+                  {mostrarRespostas && (
+                    <p className={resultados.bEcNaoA === false ? "text-sm text-red-500" : "text-sm text-green-500"}>
+                      Resposta correta: {valoresDasRegioes.bEcNaoA}
+                    </p>
                   )}
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="aBc" className="flex items-center gap-2">
-                    "Os Três Mosqueteiros" (A∩B∩C)
-                    {resultados.aBc !== null &&
-                      (resultados.aBc ? (
-                        <CheckCircle className="h-5 w-5 text-green-500" />
-                      ) : (
-                        <XCircle className="h-5 w-5 text-red-500" />
-                      ))}
+                  <Label htmlFor="aBc" className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      "Os Três Mosqueteiros" (A∩B∩C)
+                      {resultados.aBc !== null &&
+                        (resultados.aBc ? (
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <XCircle className="h-5 w-5 text-red-500" />
+                        ))}
+                    </div>
+                    <span className="text-xs text-slate-500">A∩B∩C</span>
                   </Label>
                   <Input
                     id="aBc"
@@ -417,20 +498,25 @@ export default function TeoriaConjuntos() {
                     onChange={(e) => handleInputChange("aBc", e.target.value)}
                     className={resultados.aBc === false ? "border-red-500" : ""}
                   />
-                  {mostrarRespostas && resultados.aBc === false && (
-                    <p className="text-sm text-red-500">Resposta correta: {intersecaoABC}</p>
+                  {mostrarRespostas && (
+                    <p className={resultados.aBc === false ? "text-sm text-red-500" : "text-sm text-green-500"}>
+                      Resposta correta: {valoresDasRegioes.aBc}
+                    </p>
                   )}
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="nenhum" className="flex items-center gap-2">
-                    "Os Zero a Esquerda" (Nenhum)
-                    {resultados.nenhum !== null &&
-                      (resultados.nenhum ? (
-                        <CheckCircle className="h-5 w-5 text-green-500" />
-                      ) : (
-                        <XCircle className="h-5 w-5 text-red-500" />
-                      ))}
+                  <Label htmlFor="nenhum" className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      "Os Zero a Esquerda" (Nenhum)
+                      {resultados.nenhum !== null &&
+                        (resultados.nenhum ? (
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <XCircle className="h-5 w-5 text-red-500" />
+                        ))}
+                    </div>
+                    <span className="text-xs text-slate-500">T - (A∪B∪C)</span>
                   </Label>
                   <Input
                     id="nenhum"
@@ -439,8 +525,10 @@ export default function TeoriaConjuntos() {
                     onChange={(e) => handleInputChange("nenhum", e.target.value)}
                     className={resultados.nenhum === false ? "border-red-500" : ""}
                   />
-                  {mostrarRespostas && resultados.nenhum === false && (
-                    <p className="text-sm text-red-500">Resposta correta: {calcularNenhum()}</p>
+                  {mostrarRespostas && (
+                    <p className={resultados.nenhum === false ? "text-sm text-red-500" : "text-sm text-green-500"}>
+                      Resposta correta: {valoresDasRegioes.nenhum}
+                    </p>
                   )}
                 </div>
               </div>
@@ -477,6 +565,8 @@ export default function TeoriaConjuntos() {
               intersecaoBC={intersecaoBC}
               intersecaoABC={intersecaoABC}
               total={total}
+              nomesConjuntos={nomesConjuntos}
+              valoresDasRegioes={valoresDasRegioes}
             />
           </CardContent>
         </Card>
@@ -484,4 +574,3 @@ export default function TeoriaConjuntos() {
     </Tabs>
   )
 }
-
