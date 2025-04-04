@@ -91,7 +91,9 @@ export default function TeoriaConjuntos() {
     })
   }
 
-  // Modificar a função gerarNovoProblema para incluir a seleção de temas e nomes
+  // Modificar a função gerarNovoProblema para garantir que os valores sejam atualizados corretamente
+  // Substitua a função gerarNovoProblema atual por esta versão corrigida:
+
   const gerarNovoProblema = () => {
     // Gera valores aleatórios mas consistentes
     const novoTotal = Math.floor(Math.random() * 300) + 100
@@ -104,14 +106,15 @@ export default function TeoriaConjuntos() {
     const maxAC = Math.min(novoA, novoC) - 5
     const maxBC = Math.min(novoB, novoC) - 5
 
-    const novoAB = Math.floor(Math.random() * maxAB) + 5
-    const novoAC = Math.floor(Math.random() * maxAC) + 5
-    const novoBC = Math.floor(Math.random() * maxBC) + 5
+    const novoAB = Math.max(Math.floor(Math.random() * maxAB) + 5, 5)
+    const novoAC = Math.max(Math.floor(Math.random() * maxAC) + 5, 5)
+    const novoBC = Math.max(Math.floor(Math.random() * maxBC) + 5, 5)
 
     // Garante que a interseção ABC seja menor que as interseções 2 a 2
     const maxABC = Math.min(novoAB, novoAC, novoBC) - 2
     const novoABC = Math.max(Math.floor(Math.random() * maxABC) + 2, 1)
 
+    // Atualiza os estados com os novos valores
     setConjuntoA(novoA)
     setConjuntoB(novoB)
     setConjuntoC(novoC)
